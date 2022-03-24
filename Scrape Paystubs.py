@@ -1,4 +1,4 @@
-""" Scraping Text from PDF (Earnings and Leave Statements) """
+""" Scraping Text from PDF (Paystubs) """
 
 import glob
 import pdfplumber
@@ -13,14 +13,14 @@ from tabulate import tabulate
 import pdfplumber
 import pandas as pd
 
-" Import files "
+" Import PDF "
 
 # Single file as a test
 test_pdf = pdfplumber.open(r'Projects/Scrape-Paystubs/FERC - Earnings & Leave Statements/normal.pdf')
 len(test_pdf.pages)
 
 
-" Extract text from files "
+" Extract text from PDF "
 
 # Single page
 test_pdf_text = test_pdf.pages[0].extract_text().replace('\n', '<end>')
@@ -32,10 +32,6 @@ for i in range(0, len(test_pdf.pages)):
     string += test_pdf.pages[i].extract_text().replace('\n', '<end>')
 
 
-" Blank list to store extracted data "
-
-out = []
-
 " Extraction method for single item "
 
 # Set up keyword that describes the data to extract
@@ -44,27 +40,39 @@ print(keyword)
 
 # Return index position of pdf that contains keyword
 value_index = string.find(keyword)
-print(value_index)  # 129
+print(value_index)  # keyword starts at index no. 129
 
-# Find starting index of desired value
+# Find starting index of desired value following the keyword
 start = string.find(keyword) + len(keyword) + 1
-print(start)  # 150
+print(start)  # value associated with keyword starts at index no. 150
 
-# Search string for desired value, based on starting index of desired value
-string[(value_index+len(keyword)):string.find('<end>', start)]
-# the find function in the second index position looks for <end> starting at the string in the 'start' variable
+# Search string for desired value based on its index
+string[(value_index+len(keyword)):string.find('<end>', string.find(keyword))]
+# The find function in the second index position looks for <end> starting at the point in the string that begins with
+# the keyword.
 
 
 
-" shorter version "
+" Shorter version "
+
+headings = [
+    'Pay Period End Date',
+    'Net Pay'
+    ]
+
+# Blank list to store extracted data "
+out = []
 
 # Pay period End Date
-print(string[(string.find('Pay Period Ending : ')+len('Pay Period Ending : ')):(string.find('<end>', string.find(
-    'Pay Period Ending : ')))])
+pp_end = string[(string.find('Pay Period Ending : ')+len('Pay Period Ending : ')):(string.find('<end>', string.find(
+    'Pay Period Ending : ')))]
+out.append(pp_end)
 
 # Net pay
-print(string[(string.find('Net Pay $ : ')+len('Net Pay $ : ')):(string.find('<end>', string.find(
-    'Net Pay $ : ')))])
+net_pay = string[(string.find('Net Pay $ : ')+len('Net Pay $ : ')):(string.find('<end>', string.find(
+    'Net Pay $ : ')))]
+out.append(net_pay)
+print(out)
 
 # Pay period
 print(string[(string.find('Pay Period # : ')+len('Pay Period # : ')):(string.find('<end>', string.find(
@@ -152,11 +160,6 @@ print(federal_taxes_adjusted_substring[(federal_taxes_adjusted_substring.find('C
 # Medicare Tax Adjusted
 # FEGLI - Regular Adjusted
 
-
-" infrequent items "
-# Other award
-
-
 " Follows a different format "
 
 # Service Comp Date
@@ -186,6 +189,172 @@ print(benefits_paid_by_government_substring[(benefits_paid_by_government_substri
 # TSP Basic
 # TSP Matching
 # FERS/FRAE
+
+
+" Infrequent items "
+# Other award
+# 'Sick Leave Used Current: '
+# 'Time Off Award Begin Balance Current: ',
+# 'Time Off Award Begin Balance Leave Year: '
+# 'Time Off Award Advanced: '
+# 'Time Off Award Ending Balance: '
+
+
+
+
+
+
+"------------------------------------------ New Code for Multiple PDFs ------------------------------------------"
+
+
+" Call PDFs in Folder "
+
+paystubs_folder = (glob.glob('Projects/Scrape-Paystubs/FERC - Earnings & Leave Statements/*.pdf'))
+
+
+" Extract information from all PDFs "
+
+out_single = []  # Empty list to store scraped information
+out_multi = []
+
+# Loop through each page of each PDF
+for file in paystubs_folder:
+    with pdfplumber.open(file) as pdf:
+        string = ''  # Empty string to store text from each page within a single PDF
+        for i in range(0, len(pdf.pages)):
+            string += pdf.pages[i].extract_text().replace('\n', '<end>')
+
+        value = []
+
+        " Extract information from each PDF "
+
+        # loop through each individually (run either this or the next section, not both)
+
+        # pp_ending = string[(string.find('Pay Period Ending : ') + len('Pay Period Ending : ')):(string.find('<end>', string.find(
+        #     'Pay Period Ending : ')))]
+        #
+        # net_pay = string[(string.find('Net Pay $ : ') + len('Net Pay $ : ')):(string.find('<end>', string.find(
+        #     'Net Pay $ : ')))]
+        #
+        # inner_list_single = [pp_ending, net_pay]
+        # print(inner_list_single)
+        # out_single.append(inner_list_single)
+
+        # loop through keywords
+        keywords = [
+            'Pay Period Ending : ',
+            'Net Pay $ : ',
+            'Pay Period # : ',
+            'Pay Date : ',
+            'Pay Plan : ',
+            'Pay Grade : ',
+            'Pay Step : ',
+            'Pay Step : ',
+            'Annual Salary $ : ',
+            'Hourly Rate $ : ',
+            'YTD Wages: ',
+            'Gross Pay YTD: ',
+            'Total Deductions YTD: ',
+            'Net Pay Current: ',
+            'Maximum Carry Over: ',
+            'Use Or Lose Balance: ',
+            'Annual Leave Begin Balance Current: ',
+            'Annual Leave Begin Balance Leave Year: ',
+            'Annual Leave Earned Current: ',
+            'Annual Leave Earned YTD: ',
+            'Annual Leave Advanced: ',
+            'Annual Leave Ending Balance: ',
+            'Sick Leave Begin Balance Current: ',
+            'Sick Leave Begin Balance Leave Year: ',
+            'Sick Leave Earned Current: ',
+            'Sick Leave Earned YTD: ',
+            'Sick Leave Used YTD: ',
+            'Sick Leave Advanced: ',
+            'Sick Leave Ending Balance: '
+            ]
+
+        for i in keywords:
+            value.append(string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))])
+
+        # Home Address
+        home_address = string[(string.find('Home Address') + len('Home Address') + len('<end>')):(string.find('Pay Check',
+                                                                                                              string.find('Home Address'))) - len('<end>')]
+        value.append(home_address)
+
+        # Federal Taxes Adjusted - adjusted
+        fed_tax_adj = string[(string.find('Federal Taxes Adjusted') + len('Federal Taxes Adjusted')):(string.find('Adjusted',
+                                                                                                           string.find(
+            'Federal Taxes Adjusted')))]
+
+        # Federal Taxes Adjusted - current
+        federal_taxes_adjusted_substring = string[string.find('Federal Taxes Adjusted'):]
+
+        print(federal_taxes_adjusted_substring[(federal_taxes_adjusted_substring.find('Misc | ') + len('Misc | '
+                                                                                                       '')):(
+                                                   federal_taxes_adjusted_substring.find(' Current',
+                                                                                         federal_taxes_adjusted_substring.find(
+                                                                                             'Misc | ')))])
+
+        # Federal Taxes Adjusted - YTD
+        federal_taxes_adjusted_substring
+
+        print(federal_taxes_adjusted_substring[(federal_taxes_adjusted_substring.find('Current PPD | ') + len('Current PPD | '
+                                                                                                              '')):(
+                                                   federal_taxes_adjusted_substring.find(' YTD',
+                                                                                         federal_taxes_adjusted_substring.find(
+                                                                                             'Current PPD | ')))])
+
+
+        out_multi.append(value)
+
+
+print(out_single)
+print(out_multi)
+
+
+" Create DataFrame "
+
+headings = [
+    'Pay Period Ending',
+    'Net Pay',
+    'Pay Period',
+    'Pay Date',
+    'Pay Plan',
+    'Pay Grade',
+    'Pay Step',
+    'Pay Step',
+    'Annual Salary',
+    'Hourly Rate',
+    'YTD Wages',
+    'Gross Pay YTD',
+    'Total Deductions YTD',
+    'Net Pay Current',
+    'Maximum Carry Over',
+    'Use Or Lose Balance',
+    'Annual Leave Begin Balance Current',
+    'Annual Leave Begin Balance Leave Year',
+    'Annual Leave Earned Current',
+    'Annual Leave Earned YTD',
+    'Annual Leave Advanced',
+    'Annual Leave Ending Balance',
+    'Sick Leave Begin Balance Current',
+    'Sick Leave Begin Balance Leave Year',
+    'Sick Leave Earned Current',
+    'Sick Leave Earned YTD',
+    'Sick Leave Used YTD',
+    'Sick Leave Advanced',
+    'Sick Leave Ending Balance',
+    'Home Address'
+    ]
+
+df = pd.DataFrame(out_multi, columns=headings)
+print(df)
+
+
+
+
+
+
 
 
 
