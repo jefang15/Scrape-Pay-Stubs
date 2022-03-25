@@ -1,163 +1,177 @@
-""" Scraping Text from PDF (Paystubs) """
+""" Scraping Text from Pay Stubs """
 
 import glob
 import pdfplumber
 import pandas as pd
 from tabulate import tabulate
 
-paystubs_folder = (glob.glob('Projects/Scrape-Paystubs/FERC - Earnings & Leave Statements/*.pdf'))
 
-out_multi = []  # Empty list to store information from all PDFs
+" Create function that scrapes information from pay stubs and accounts for occasional differences between PDFs "
 
-# TODO: put loop in a function
-for file in paystubs_folder:
-    with pdfplumber.open(file) as pdf:
-        string = ''
-        for i in range(0, len(pdf.pages)):  # For each page in a single PDF
-            string += pdf.pages[i].extract_text().replace('\n', '<end>')  # Write each page to empty string
-            # Keeps <end> as indicator for end of each line of string
 
-        inner = []
+def scrape_pay_stubs(folder):
+    out = []  # Empty list to store information from all PDFs
+    for file in folder:
+        with pdfplumber.open(file) as one_pdf:
+            string = ''
+            for i in range(0, len(one_pdf.pages)):
+                string += one_pdf.pages[i].extract_text().replace('\n', '<end>')  # Write each page of single PDF to empty string
+                # Keeps <end> as indicator for end of each line of string
 
-        # TODO: Add annual leave used current throughout
-        # TODO: Add 'Time Off Award Earned Current: ' throughout
-        keywords = [
-            'Pay Period Ending : ',
-            'Net Pay $ : ',
-            'Pay Period # : ',
-            'Pay Date : ',
-            'Pay Plan : ',
-            'Pay Grade : ',
-            'Pay Step : ',
-            'Annual Salary $ : ',
-            'Hourly Rate $ : ',
-            'YTD Wages: ',
-            'Gross Pay YTD: ',
-            'Total Deductions YTD: ',
-            'Maximum Carry Over: ',
-            'Use Or Lose Balance: ',
-            'Annual Leave Begin Balance Current: ',
-            'Annual Leave Begin Balance Leave Year: ',
-            'Annual Leave Earned Current: ',
-            'Annual Leave Earned YTD: ',
-            'Annual Leave Advanced: ',
-            'Annual Leave Ending Balance: ',
-            'Sick Leave Begin Balance Current: ',
-            'Sick Leave Begin Balance Leave Year: ',
-            'Sick Leave Earned Current: ',
-            'Sick Leave Earned YTD: ',
-            'Sick Leave Used Current: ',
-            'Sick Leave Used YTD: ',
-            'Sick Leave Advanced: ',
-            'Sick Leave Ending Balance: ',
-            'Time Off Award Begin Balance Current: ',
-            'Time Off Award Begin Balance Leave Year: ',
-            'Time Off Award Advanced: ',
-            'Time Off Award Ending Balance: '
-            ]
+            inner = []
 
-        for i in keywords:
-            if i in string:  # If statement because certain keywords do not appear in each PDF
-                inner.append(string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))])
-            else:
-                inner.append('')
-        # string.find(i) - returns index position of the first appearance of the keyword
-        # len(i) - returns length of keyword string; to get to the index number at the end of the entire keyword
-        # string.find('<end>', string.find(i)) - returns index when <end> appears, starting at the keyword index
-        # string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))] - returns desired value based on index
+            " General Information and Leave "
 
-        # Other Award
-        if 'Other Award' in string:
-            other_award_substring = string[string.find('Other Award'):]
-            inner.append(other_award_substring[
-                     other_award_substring.find('Adj Hours | ') + len('Adj Hours | '):other_award_substring.find(' Current PPD')])
-        else:
-            inner.append(0)
+            # TODO: Add annual leave used current throughout
+            # TODO: Add 'Time Off Award Earned Current: ' throughout
+            keywords = [
+                'Pay Period Ending : ',
+                'Net Pay $ : ',
+                'Pay Period # : ',
+                'Pay Date : ',
+                'Pay Plan : ',
+                'Pay Grade : ',
+                'Pay Step : ',
+                'Annual Salary $ : ',
+                'Hourly Rate $ : ',
+                'YTD Wages: ',
+                'Gross Pay YTD: ',
+                'Total Deductions YTD: ',
+                'Maximum Carry Over: ',
+                'Use Or Lose Balance: ',
+                'Annual Leave Begin Balance Current: ',
+                'Annual Leave Begin Balance Leave Year: ',
+                'Annual Leave Earned Current: ',
+                'Annual Leave Earned YTD: ',
+                'Annual Leave Advanced: ',
+                'Annual Leave Ending Balance: ',
+                'Sick Leave Begin Balance Current: ',
+                'Sick Leave Begin Balance Leave Year: ',
+                'Sick Leave Earned Current: ',
+                'Sick Leave Earned YTD: ',
+                'Sick Leave Used Current: ',
+                'Sick Leave Used YTD: ',
+                'Sick Leave Advanced: ',
+                'Sick Leave Ending Balance: ',
+                'Time Off Award Begin Balance Current: ',
+                'Time Off Award Begin Balance Leave Year: ',
+                'Time Off Award Advanced: ',
+                'Time Off Award Ending Balance: '
+                ]
 
-        # Home Address
-        inner.append(string[(string.find('Home Address') + len('Home Address') + len('<end>')):(string.find('Pay Check', string.find('Home Address'))) - len('<end>')])
+            for i in keywords:
+                if i in string:  # If statement because certain keywords do not appear in each PDF
+                    inner.append(string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))])
+                else:
+                    inner.append('')
+            # string.find(i) - returns index position of the first appearance of the keyword
+            # len(i) - returns length of keyword string; to get to the index number at the end of the entire keyword
+            # string.find('<end>', string.find(i)) - returns index when <end> appears, starting at the keyword index
+            # string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))] - returns desired value based on index
 
-        " Deductions "
-
-        keywords2 = [
-            'Federal Taxes',
-            'State Tax 1 ( DC )',
-            'State Tax 1 ( VA )',
-            'State Tax 2 ( DC )',
-            'Health Benefits - Pretax',
-            'Dental/Vision',
-            'TSP Tax Deferred',
-            'Retirement - FERS/FRAE',
-            'OASDI Tax',
-            'Medicare Tax',
-            'FEGLI - Regular'
-            ]
-
-        for i in keywords2:
-            deductions_substring = string[string.find(i):]
-            if i in string:
-                # Federal Taxes Adjusted
-                inner.append(string[(string.find(i) + len(i)):(string.find('Adjusted', string.find(i)))])
+            # Other Award
+            if 'Other Award' in string:
+                other_award_substring = string[string.find('Other Award'):]
+                inner.append(other_award_substring[
+                             other_award_substring.find('Adj Hours | ') + len('Adj Hours | '):other_award_substring.find(
+                                 ' Current PPD')])
             else:
                 inner.append(0)
 
-            if i in string:
-                # Federal Taxes Current
-                inner.append(deductions_substring[(deductions_substring.find('Misc | ') + len('Misc | ')):(
-                    deductions_substring.find('Current', deductions_substring.find('Misc | ')))])
-            else:
-                inner.append(0)
+            # Home Address
+            inner.append(string[(string.find('Home Address') + len('Home Address') + len('<end>')):(string.find('Pay Check',
+                                                                                                                string.find(
+                                                                                                                    'Home Address'))) - len(
+                '<end>')])
 
-            if i in string:
-                # Federal Taxes YTD
-                inner.append(deductions_substring[(deductions_substring.find('Current PPD | ') + len('Current PPD | ')):(
-                    deductions_substring.find(' YTD', deductions_substring.find('Current PPD | ')))])
-            else:
-                inner.append(0)
+            " Deductions "
 
-        " Basic Info "
+            keywords2 = [
+                'Federal Taxes',
+                'State Tax 1 ( DC )',
+                'State Tax 1 ( VA )',
+                'State Tax 2 ( DC )',
+                'Health Benefits - Pretax',
+                'Dental/Vision',
+                'TSP Tax Deferred',
+                'Retirement - FERS/FRAE',
+                'OASDI Tax',
+                'Medicare Tax',
+                'FEGLI - Regular'
+                ]
 
-        keywords3 = [
-            'Service Comp Date',
-            'Agency',
-            'Cumulative Retirement Agency $',
-            'Duty Station',
-            'Pay Begin Date',
-            'Financial Institution',
-            'TSP Tax Deferred Amt/%'
-            ]
+            for i in keywords2:
+                deductions_substring = string[string.find(i):]
+                if i in string:
+                    # Federal Taxes Adjusted
+                    inner.append(string[(string.find(i) + len(i)):(string.find('Adjusted', string.find(i)))])
+                else:
+                    inner.append(0)
 
-        for i in keywords3:
-            inner.append(string[(string.find(i) + len(i)):(string.find(':', string.find(i)))])
+                if i in string:
+                    # Federal Taxes Current
+                    inner.append(deductions_substring[(deductions_substring.find('Misc | ') + len('Misc | ')):(
+                        deductions_substring.find('Current', deductions_substring.find('Misc | ')))])
+                else:
+                    inner.append(0)
 
-        " Benefits "
+                if i in string:
+                    # Federal Taxes YTD
+                    inner.append(deductions_substring[(deductions_substring.find('Current PPD | ') + len('Current PPD | ')):(
+                        deductions_substring.find(' YTD', deductions_substring.find('Current PPD | ')))])
+                else:
+                    inner.append(0)
 
-        benefits_substring = string[string.find('Benefits Paid by Government'):]
+            " Basic Info "
 
-        keywords4 = [
-            'FEGLI',
-            'Medicare',
-            'OASDI',
-            'TSP Basic',
-            'TSP Matching',
-            'FERS/FRAE'
-            ]
+            keywords3 = [
+                'Service Comp Date',
+                'Agency',
+                'Cumulative Retirement Agency $',
+                'Duty Station',
+                'Pay Begin Date',
+                'Financial Institution',
+                'TSP Tax Deferred Amt/%'
+                ]
 
-        for i in keywords4:
-            # Benefits Current
-            inner.append(benefits_substring[
-                         (benefits_substring.find(i) + len(i)):(benefits_substring.find(' Current', benefits_substring.find(i)))])
+            for i in keywords3:
+                inner.append(string[(string.find(i) + len(i)):(string.find(':', string.find(i)))])
 
-            # Benefits YTD
-            inner.append(benefits_substring[(benefits_substring.find('Current PPD | ') + len('Current PPD | ')):(
-                benefits_substring.find(' YTD', benefits_substring.find('Current PPD | ')))])
+            " Benefits "
 
-        " Append all scraped values from inner list to outer list "
-        out_multi.append(inner)
+            benefits_substring = string[string.find('Benefits Paid by Government'):]
 
+            keywords4 = [
+                'FEGLI',
+                'Medicare',
+                'OASDI',
+                'TSP Basic',
+                'TSP Matching',
+                'FERS/FRAE'
+                ]
+
+            for i in keywords4:
+                # Benefits Current
+                inner.append(benefits_substring[
+                             (benefits_substring.find(i) + len(i)):(
+                                 benefits_substring.find(' Current', benefits_substring.find(i)))])
+
+                # Benefits YTD
+                inner.append(benefits_substring[(benefits_substring.find('Current PPD | ') + len('Current PPD | ')):(
+                    benefits_substring.find(' YTD', benefits_substring.find('Current PPD | ')))])
+
+            " Append all scraped values from inner list to outer list "
+            out.append(inner)
+    return out
+
+
+" Open Folder with All Pay Stubs "
+pay_stubs_folder = (glob.glob('Projects/Scrape-Paystubs/FERC - Earnings & Leave Statements/*.pdf'))
+
+" Apply Function to Folder "
+scraped_data = scrape_pay_stubs(pay_stubs_folder)
 
 " Create DataFrame "
-
 headings = [
     'Pay Period Ending',
     'Net Pay',
@@ -247,8 +261,7 @@ headings = [
     'FERS/FRAE YTD'
     ]
 
-df_scraped = pd.DataFrame(out_multi, columns=headings)
-
+df_scraped = pd.DataFrame(scraped_data, columns=headings)
 
 " Clean Data "
 
@@ -438,6 +451,7 @@ df_subset = df_rearrange[[
 
 # Print
 print(tabulate(df_subset, headers='keys', tablefmt='plain'))
+
 
 
 "------------------------------------------ Old Code Below ------------------------------------------"
