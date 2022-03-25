@@ -1,18 +1,15 @@
 """ Scraping Text from PDF (Paystubs) """
 
-
-
-
 import glob
 import pdfplumber
 import pandas as pd
 from tabulate import tabulate
 
-
 paystubs_folder = (glob.glob('Projects/Scrape-Paystubs/FERC - Earnings & Leave Statements/*.pdf'))
 
 out_multi = []  # Empty list to store information from all PDFs
 
+# TODO: put loop in a function
 for file in paystubs_folder:
     with pdfplumber.open(file) as pdf:
         string = ''
@@ -22,6 +19,8 @@ for file in paystubs_folder:
 
         inner = []
 
+        # TODO: Add annual leave used current throughout
+        # TODO: Add 'Time Off Award Earned Current: ' throughout
         keywords = [
             'Pay Period Ending : ',
             'Net Pay $ : ',
@@ -30,13 +29,11 @@ for file in paystubs_folder:
             'Pay Plan : ',
             'Pay Grade : ',
             'Pay Step : ',
-            'Pay Step : ',
             'Annual Salary $ : ',
             'Hourly Rate $ : ',
             'YTD Wages: ',
             'Gross Pay YTD: ',
             'Total Deductions YTD: ',
-            'Net Pay Current: ',
             'Maximum Carry Over: ',
             'Use Or Lose Balance: ',
             'Annual Leave Begin Balance Current: ',
@@ -63,15 +60,19 @@ for file in paystubs_folder:
             if i in string:  # If statement because certain keywords do not appear in each PDF
                 inner.append(string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))])
             else:
-                inner.append(0)
+                inner.append('')
         # string.find(i) - returns index position of the first appearance of the keyword
         # len(i) - returns length of keyword string; to get to the index number at the end of the entire keyword
         # string.find('<end>', string.find(i)) - returns index when <end> appears, starting at the keyword index
         # string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))] - returns desired value based on index
 
         # Other Award
-        other_award_substring = string[string.find('Other Award'):]
-        inner.append(other_award_substring[other_award_substring.find('Adj Hours | ')+len('Adj Hours | '):other_award_substring.find(' Current PPD')])
+        if 'Other Award' in string:
+            other_award_substring = string[string.find('Other Award'):]
+            inner.append(other_award_substring[
+                     other_award_substring.find('Adj Hours | ') + len('Adj Hours | '):other_award_substring.find(' Current PPD')])
+        else:
+            inner.append(0)
 
         # Home Address
         inner.append(string[(string.find('Home Address') + len('Home Address') + len('<end>')):(string.find('Pay Check', string.find('Home Address'))) - len('<end>')])
@@ -95,20 +96,22 @@ for file in paystubs_folder:
         for i in keywords2:
             deductions_substring = string[string.find(i):]
             if i in string:
-                # Federal Taxes Adjusted - Adjusted
+                # Federal Taxes Adjusted
                 inner.append(string[(string.find(i) + len(i)):(string.find('Adjusted', string.find(i)))])
             else:
                 inner.append(0)
 
             if i in string:
-                # Federal Taxes Adjusted - Current
-                inner.append(deductions_substring[(deductions_substring.find('Misc | ') + len('Misc | ')):(deductions_substring.find('Current', deductions_substring.find('Misc | ')))])
+                # Federal Taxes Current
+                inner.append(deductions_substring[(deductions_substring.find('Misc | ') + len('Misc | ')):(
+                    deductions_substring.find('Current', deductions_substring.find('Misc | ')))])
             else:
                 inner.append(0)
 
             if i in string:
-                # Federal Taxes Adjusted - YTD
-                inner.append(deductions_substring[(deductions_substring.find('Current PPD | ') + len('Current PPD | ')):(deductions_substring.find(' YTD', deductions_substring.find('Current PPD | ')))])
+                # Federal Taxes YTD
+                inner.append(deductions_substring[(deductions_substring.find('Current PPD | ') + len('Current PPD | ')):(
+                    deductions_substring.find(' YTD', deductions_substring.find('Current PPD | ')))])
             else:
                 inner.append(0)
 
@@ -117,7 +120,7 @@ for file in paystubs_folder:
         keywords3 = [
             'Service Comp Date',
             'Agency',
-            'Cumulative Retirement Agency',
+            'Cumulative Retirement Agency $',
             'Duty Station',
             'Pay Begin Date',
             'Financial Institution',
@@ -142,7 +145,8 @@ for file in paystubs_folder:
 
         for i in keywords4:
             # Benefits Current
-            inner.append(benefits_substring[(benefits_substring.find(i) + len(i)):(benefits_substring.find(' Current', benefits_substring.find(i)))])
+            inner.append(benefits_substring[
+                         (benefits_substring.find(i) + len(i)):(benefits_substring.find(' Current', benefits_substring.find(i)))])
 
             # Benefits YTD
             inner.append(benefits_substring[(benefits_substring.find('Current PPD | ') + len('Current PPD | ')):(
@@ -150,7 +154,6 @@ for file in paystubs_folder:
 
         " Append all scraped values from inner list to outer list "
         out_multi.append(inner)
-
 
 
 " Create DataFrame "
@@ -163,67 +166,65 @@ headings = [
     'Pay Plan',
     'Pay Grade',
     'Pay Step',
-    'Pay Step',
     'Annual Salary',
     'Hourly Rate',
     'YTD Wages',
     'Gross Pay YTD',
     'Total Deductions YTD',
-    'Net Pay Current',
     'Maximum Carry Over',
     'Use Or Lose Balance',
-    'Annual Leave Begin Balance Current',
+    'Annual Leave Begin Balance',
     'Annual Leave Begin Balance Leave Year',
-    'Annual Leave Earned Current',
+    'Annual Leave Earned',
     'Annual Leave Earned YTD',
     'Annual Leave Advanced',
-    'Annual Leave Ending Balance',
-    'Sick Leave Begin Balance Current',
+    'Annual Leave Total',
+    'Sick Leave Begin Balance',
     'Sick Leave Begin Balance Leave Year',
-    'Sick Leave Earned Current',
-    'Sick Leave Earned YTD',
-    'Sick Leave Used Current',
+    'Sick Leave Earned',
+    'Sick Leave Total',
+    'Sick Leave Used',
     'Sick Leave Used YTD',
     'Sick Leave Advanced',
     'Sick Leave Ending Balance',
-    'Time Off Award Begin Balance Current',
+    'Time Off Award Begin Balance',
     'Time Off Award Begin Balance Leave Year',
     'Time Off Award Advanced',
     'Time Off Award Ending Balance',
     'Other Award',
     'Home Address',
     'Federal Taxes Adjusted',
-    'Federal Taxes Current',
+    'Federal Taxes',
     'Federal Taxes YTD',
     'State Tax 1 ( DC ) Adjusted',
-    'State Tax 1 ( DC ) Current',
+    'State Tax 1 ( DC )',
     'State Tax 1 ( DC ) YTD',
     'State Tax 1 ( VA ) Adjusted',
-    'State Tax 1 ( VA ) Current',
+    'State Tax 1 ( VA )',
     'State Tax 1 ( VA ) YTD',
     'State Tax 2 ( DC ) Adjusted',
-    'State Tax 2 ( DC ) Current',
+    'State Tax 2 ( DC )',
     'State Tax 2 ( DC ) YTD',
-    'Health Benefits - Adjusted',
-    'Health Benefits - Current',
-    'Health Benefits - YTD',
+    'Health Benefits Adjusted',
+    'Health Benefits',
+    'Health Benefits YTD',
     'Dental/Vision Adjusted',
-    'Dental/Vision Current',
+    'Dental/Vision',
     'Dental/Vision YTD',
     'TSP Tax Deferred Adjusted',
-    'TSP Tax Deferred Current',
+    'TSP Tax Deferred',
     'TSP Tax Deferred YTD',
     'Retirement - FERS/FRAE Adjusted',
-    'Retirement - FERS/FRAE Current',
+    'Retirement - FERS/FRAE',
     'Retirement - FERS/FRAE YTD',
     'OASDI Tax Adjusted',
-    'OASDI Tax Current',
+    'OASDI Tax',
     'OASDI Tax YTD',
     'Medicare Tax Adjusted',
-    'Medicare Tax Current',
+    'Medicare Tax',
     'Medicare Tax YTD',
     'FEGLI - Regular Adjusted',
-    'FEGLI - Regular Current',
+    'FEGLI - Regular',
     'FEGLI - Regular YTD',
     'Service Comp Date',
     'Agency',
@@ -231,33 +232,215 @@ headings = [
     'Duty Station',
     'Pay Begin Date',
     'Financial Institution',
-    'TSP Tax Deferred Amt/%',
-    'FEGLI Current',
+    'TSP Tax Deferred Amt',
+    'FEGLI',
     'FEGLI YTD',
-    'Medicare Current',
+    'Medicare',
     'Medicare YTD',
-    'OASDI Current',
+    'OASDI',
     'OASDI YTD',
-    'TSP Basic Current',
+    'TSP Basic',
     'TSP Basic YTD',
-    'TSP Matching Current',
+    'TSP Matching',
     'TSP Matching YTD',
-    'FERS/FRAE Current',
+    'FERS/FRAE',
     'FERS/FRAE YTD'
     ]
 
-df = pd.DataFrame(out_multi, columns=headings)
-print(df)
+df_scraped = pd.DataFrame(out_multi, columns=headings)
 
 
+" Clean Data "
 
+# Convert Data Types
+df_clean = df_scraped.copy()
+print(df_clean.dtypes)
 
+var_to_datetime = [
+    'Pay Period Ending', 'Pay Date', 'Service Comp Date', 'Pay Begin Date'
+    ]
+df_clean[var_to_datetime] = df_clean[var_to_datetime].apply(pd.to_datetime)
 
+var_to_int = [
+    'Pay Period', 'Pay Grade', 'Pay Step', 'Maximum Carry Over', 'Use Or Lose Balance', 'Annual Leave Begin Balance',
+    'Annual Leave Begin Balance Leave Year', 'Annual Leave Earned', 'Annual Leave Earned YTD', 'Annual Leave Advanced',
+    'Annual Leave Total', 'Sick Leave Begin Balance', 'Sick Leave Begin Balance Leave Year', 'Sick Leave Earned',
+    'Sick Leave Total', 'Sick Leave Used', 'Sick Leave Used YTD', 'Sick Leave Advanced', 'Sick Leave Ending Balance',
+    'Time Off Award Begin Balance', 'Time Off Award Begin Balance Leave Year', 'Time Off Award Advanced',
+    'Time Off Award Ending Balance'
+    ]
+df_clean[var_to_int] = df_clean[var_to_int].apply(pd.to_numeric).fillna(0).astype(int)
+
+var_to_float = [
+    'Net Pay', 'Annual Salary', 'Hourly Rate', 'YTD Wages', 'Gross Pay YTD', 'Total Deductions YTD', 'Federal Taxes Adjusted',
+    'Other Award', 'Federal Taxes', 'Federal Taxes YTD', 'State Tax 1 ( DC ) Adjusted', 'State Tax 1 ( DC )',
+    'State Tax 1 ( DC ) YTD', 'State Tax 1 ( VA ) Adjusted', 'State Tax 1 ( VA )', 'State Tax 1 ( VA ) YTD',
+    'State Tax 2 ( DC ) Adjusted', 'State Tax 2 ( DC )', 'State Tax 2 ( DC ) YTD', 'Health Benefits Adjusted',
+    'Health Benefits', 'Health Benefits YTD', 'Dental/Vision Adjusted', 'Dental/Vision', 'Dental/Vision YTD',
+    'TSP Tax Deferred Adjusted', 'TSP Tax Deferred', 'TSP Tax Deferred YTD', 'Retirement - FERS/FRAE Adjusted',
+    'Retirement - FERS/FRAE', 'Retirement - FERS/FRAE YTD', 'OASDI Tax Adjusted', 'OASDI Tax', 'OASDI Tax YTD',
+    'Medicare Tax Adjusted', 'Medicare Tax', 'Medicare Tax YTD', 'FEGLI - Regular Adjusted', 'FEGLI - Regular',
+    'FEGLI - Regular YTD', 'Cumulative Retirement Agency', 'FEGLI', 'FEGLI YTD', 'Medicare', 'Medicare YTD', 'OASDI',
+    'OASDI YTD', 'TSP Basic', 'TSP Basic YTD', 'TSP Matching', 'TSP Matching YTD', 'FERS/FRAE', 'FERS/FRAE YTD'
+    ]
+df_clean[var_to_float] = df_clean[var_to_float].replace(',', '', regex=True).apply(pd.to_numeric, errors='coerce').fillna(0)
+
+# Clean up
+df_clean['TSP Tax Deferred Amt'] = df_clean['TSP Tax Deferred Amt'].replace(' ', '', regex=True)
+df_clean['Home Address'] = df_clean['Home Address'].replace('<end>', '', regex=True)
+
+# Sort
+df_sort = df_clean.sort_values(by=['Pay Date']).copy().reset_index(drop=True)
+
+# Rearrange columns
+df_sort.columns
+
+df_rearrange = df_sort[[
+    'Agency',
+    'Duty Station',
+    'Service Comp Date',
+
+    'Pay Period',
+    'Pay Date',
+    'Pay Begin Date',
+    'Pay Period Ending',
+
+    'Pay Plan',
+    'Pay Grade',
+    'Pay Step',
+    'Annual Salary',
+    'Net Pay',
+    'Hourly Rate',
+    'YTD Wages',
+    'Gross Pay YTD',
+    'Total Deductions YTD',
+    'Financial Institution',
+    'Home Address',
+
+    'Maximum Carry Over',
+    'Use Or Lose Balance',
+    'Annual Leave Begin Balance',
+    'Annual Leave Begin Balance Leave Year',
+    'Annual Leave Earned',
+    'Annual Leave Earned YTD',
+    'Annual Leave Advanced',
+    'Annual Leave Total',
+    'Sick Leave Begin Balance',
+    'Sick Leave Begin Balance Leave Year',
+    'Sick Leave Earned',
+    'Sick Leave Total',
+    'Sick Leave Used',
+    'Sick Leave Used YTD',
+    'Sick Leave Advanced',
+    'Sick Leave Ending Balance',
+    'Time Off Award Begin Balance',
+    'Time Off Award Begin Balance Leave Year',
+    'Time Off Award Advanced',
+    'Time Off Award Ending Balance',
+    'Other Award',
+    'Federal Taxes Adjusted',
+    'Federal Taxes',
+    'Federal Taxes YTD',
+    'State Tax 1 ( DC ) Adjusted',
+    'State Tax 1 ( DC )',
+    'State Tax 1 ( DC ) YTD',
+    'State Tax 1 ( VA ) Adjusted',
+    'State Tax 1 ( VA )',
+    'State Tax 1 ( VA ) YTD',
+    'State Tax 2 ( DC ) Adjusted',
+    'State Tax 2 ( DC )',
+    'State Tax 2 ( DC ) YTD',
+    'Health Benefits Adjusted',
+    'Health Benefits',
+    'Health Benefits YTD',
+    'Dental/Vision Adjusted',
+    'Dental/Vision',
+    'Dental/Vision YTD',
+    'TSP Tax Deferred Adjusted',
+    'TSP Tax Deferred',
+    'TSP Tax Deferred YTD',
+    'Retirement - FERS/FRAE Adjusted',
+    'Retirement - FERS/FRAE',
+    'Retirement - FERS/FRAE YTD',
+    'OASDI Tax Adjusted',
+    'OASDI Tax',
+    'OASDI Tax YTD',
+    'Medicare Tax Adjusted',
+    'Medicare Tax',
+    'Medicare Tax YTD',
+    'FEGLI - Regular Adjusted',
+    'FEGLI - Regular',
+    'FEGLI - Regular YTD',
+    'Cumulative Retirement Agency',
+    'TSP Tax Deferred Amt',
+    'FEGLI',
+    'FEGLI YTD',
+    'Medicare',
+    'Medicare YTD',
+    'OASDI',
+    'OASDI YTD',
+    'TSP Basic',
+    'TSP Basic YTD',
+    'TSP Matching',
+    'TSP Matching YTD',
+    'FERS/FRAE',
+    'FERS/FRAE YTD'
+    ]].copy()
+
+# Subset
+# TODO: Add annual leave used current here and throughout
+df_subset = df_rearrange[[
+    'Agency',
+    'Duty Station',
+    'Pay Period',
+    'Pay Date',
+    'Pay Begin Date',
+    'Pay Period Ending',
+    'Pay Plan',
+    'Pay Grade',
+    'Pay Step',
+    'Annual Salary',
+    'Net Pay',
+    'Hourly Rate',
+    'YTD Wages',
+    'Gross Pay YTD',
+    'Total Deductions YTD',
+    'Financial Institution',
+    'Home Address',
+    'Annual Leave Earned',
+    'Annual Leave Total',
+    'Sick Leave Earned',
+    'Sick Leave Total',
+    'Sick Leave Used',
+    'Time Off Award Ending Balance',
+    'Other Award',
+    'Federal Taxes Adjusted',
+    'Federal Taxes',
+    'State Tax 1 ( DC )',
+    'State Tax 1 ( VA )',
+    'State Tax 2 ( DC )',
+    'Health Benefits',
+    'Dental/Vision',
+    'TSP Tax Deferred',
+    'Retirement - FERS/FRAE',
+    'OASDI Tax',
+    'Medicare Tax',
+    'FEGLI - Regular',
+    'Cumulative Retirement Agency',
+    'TSP Tax Deferred Amt',
+    'FEGLI',
+    'Medicare',
+    'OASDI',
+    'TSP Basic',
+    'TSP Matching',
+    'FERS/FRAE',
+    ]].copy()
+
+# Print
+print(tabulate(df_subset, headers='keys', tablefmt='plain'))
 
 
 "------------------------------------------ Old Code Below ------------------------------------------"
-
-
 
 " Analysis "
 
@@ -474,8 +657,6 @@ print(tabulate(els_master, headers='keys', tablefmt='plain'))
 els_sum = els_master.groupby(['Year', 'Category'])['Amount'].sum().reset_index()
 print(tabulate(els_sum, headers='keys', tablefmt='plain'))
 # Gross pay and total deduction values are correct. Net Pay for some reason is incorrect.
-
-
 
 
 # Source
