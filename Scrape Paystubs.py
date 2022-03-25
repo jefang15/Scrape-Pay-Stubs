@@ -192,13 +192,31 @@ print(benefits_paid_by_government_substring[(benefits_paid_by_government_substri
 
 
 " Infrequent items "
-# Other award
-# 'Sick Leave Used Current: '
 # 'Time Off Award Begin Balance Current: ',
 # 'Time Off Award Begin Balance Leave Year: '
 # 'Time Off Award Advanced: '
 # 'Time Off Award Ending Balance: '
+# 'State Tax 1 ( VA )'
+# 'State Tax 1 ( DC )'
+# 'State Tax 2 ( DC )'
 
+
+
+" Read Me "
+
+" Extract information from each PDF "
+
+# loop through each individually (run either this or the next section, not both)
+
+# pp_ending = string[(string.find('Pay Period Ending : ') + len('Pay Period Ending : ')):(string.find('<end>', string.find(
+#     'Pay Period Ending : ')))]
+#
+# net_pay = string[(string.find('Net Pay $ : ') + len('Net Pay $ : ')):(string.find('<end>', string.find(
+#     'Net Pay $ : ')))]
+#
+# inner_list_single = [pp_ending, net_pay]
+# print(inner_list_single)
+# out_single.append(inner_list_single)
 
 
 
@@ -214,7 +232,6 @@ paystubs_folder = (glob.glob('Projects/Scrape-Paystubs/FERC - Earnings & Leave S
 
 " Extract information from all PDFs "
 
-out_single = []  # Empty list to store scraped information
 out_multi = []
 
 # Loop through each page of each PDF
@@ -225,20 +242,6 @@ for file in paystubs_folder:
             string += pdf.pages[i].extract_text().replace('\n', '<end>')
 
         value = []
-
-        " Extract information from each PDF "
-
-        # loop through each individually (run either this or the next section, not both)
-
-        # pp_ending = string[(string.find('Pay Period Ending : ') + len('Pay Period Ending : ')):(string.find('<end>', string.find(
-        #     'Pay Period Ending : ')))]
-        #
-        # net_pay = string[(string.find('Net Pay $ : ') + len('Net Pay $ : ')):(string.find('<end>', string.find(
-        #     'Net Pay $ : ')))]
-        #
-        # inner_list_single = [pp_ending, net_pay]
-        # print(inner_list_single)
-        # out_single.append(inner_list_single)
 
         # loop through keywords
         keywords = [
@@ -268,47 +271,107 @@ for file in paystubs_folder:
             'Sick Leave Begin Balance Leave Year: ',
             'Sick Leave Earned Current: ',
             'Sick Leave Earned YTD: ',
+            'Sick Leave Used Current: ',
             'Sick Leave Used YTD: ',
             'Sick Leave Advanced: ',
-            'Sick Leave Ending Balance: '
+            'Sick Leave Ending Balance: ',
+            'Time Off Award Begin Balance Current: ',
+            'Time Off Award Begin Balance Leave Year: ',
+            'Time Off Award Advanced: ',
+            'Time Off Award Ending Balance: '
             ]
 
         for i in keywords:
-            value.append(string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))])
+            if i in string:
+                value.append(string[(string.find(i) + len(i)):(string.find('<end>', string.find(i)))])
+            else:
+                value.append(0)
 
         # Home Address
-        home_address = string[(string.find('Home Address') + len('Home Address') + len('<end>')):(string.find('Pay Check',
-                                                                                                              string.find('Home Address'))) - len('<end>')]
-        value.append(home_address)
+        value.append(string[(string.find('Home Address') + len('Home Address') + len('<end>')):(string.find('Pay Check',
+                                                                                                              string.find('Home Address'))) - len('<end>')])
 
-        # Federal Taxes Adjusted - adjusted
-        fed_tax_adj = string[(string.find('Federal Taxes Adjusted') + len('Federal Taxes Adjusted')):(string.find('Adjusted',
-                                                                                                           string.find(
-            'Federal Taxes Adjusted')))]
+        " Deductions "
 
-        # Federal Taxes Adjusted - current
-        federal_taxes_adjusted_substring = string[string.find('Federal Taxes Adjusted'):]
+        keywords2 = [
+            'Federal Taxes',
+            'State Tax 1 ( DC )',
+            'State Tax 1 ( VA )',
+            'State Tax 2 ( DC )',
+            'Health Benefits - Pretax',
+            'Dental/Vision',
+            'TSP Tax Deferred',
+            'Retirement - FERS/FRAE',
+            'OASDI Tax',
+            'Medicare Tax',
+            'FEGLI - Regular'
+            ]
 
-        print(federal_taxes_adjusted_substring[(federal_taxes_adjusted_substring.find('Misc | ') + len('Misc | '
-                                                                                                       '')):(
-                                                   federal_taxes_adjusted_substring.find(' Current',
-                                                                                         federal_taxes_adjusted_substring.find(
-                                                                                             'Misc | ')))])
+        for i in keywords2:
+            if i in string:
+                # Federal Taxes Adjusted - Adjusted
+                value.append(string[(string.find(i) + len(i)):(string.find('Adjusted', string.find(i)))])
+            else:
+                value.append(0)
 
-        # Federal Taxes Adjusted - YTD
-        federal_taxes_adjusted_substring
+            if i in string:
+                element_substring = string[string.find(i):]
+                # Federal Taxes Adjusted - Current
+                value.append(element_substring[(element_substring.find('Misc | ') + len('Misc | ')):(element_substring.find(
+                    'Current', element_substring.find('Misc | ')))])
+            else:
+                value.append(0)
 
-        print(federal_taxes_adjusted_substring[(federal_taxes_adjusted_substring.find('Current PPD | ') + len('Current PPD | '
-                                                                                                              '')):(
-                                                   federal_taxes_adjusted_substring.find(' YTD',
-                                                                                         federal_taxes_adjusted_substring.find(
-                                                                                             'Current PPD | ')))])
+            if i in string:
+                # Federal Taxes Adjusted - YTD
+                value.append(element_substring[(element_substring.find('Current PPD | ') + len('Current PPD | ')):(
+                    element_substring.find(' YTD', element_substring.find('Current PPD | ')))])
+            else:
+                value.append(0)
 
+        " Basic Info "
 
+        keywords3 = [
+            'Service Comp Date',
+            'Agency',
+            'Cumulative Retirement Agency',
+            'Duty Station',
+            'Pay Begin Date',
+            'Financial Institution',
+            'TSP Tax Deferred Amt/%'
+            ]
+
+        for i in keywords3:
+            value.append(string[(string.find(i) + len(i)):(string.find(':', string.find(i)))])
+
+        " Benefits "
+
+        keywords4 = [
+            'FEGLI',
+            'Medicare',
+            'OASDI',
+            'TSP Basic',
+            'TSP Matching',
+            'FERS/FRAE'
+            ]
+
+        benefits_substring = string[string.find('Benefits Paid by Government'):]
+
+        for i in keywords4:
+            # Current
+            value.append(benefits_substring[(benefits_substring.find(i) + len(i)):(benefits_substring.find(' Current',
+                                                                                                          benefits_substring.find(i)))])
+
+            # YTD
+            element4_ytd = benefits_substring[(benefits_substring.find('Current PPD | ') + len('Current PPD | ')):(
+                benefits_substring.find(' YTD', benefits_substring.find('Current PPD | ')))]
+            value.append(element4_ytd)
+
+        " Append all scraped values from inner list to outer list "
         out_multi.append(value)
 
 
-print(out_single)
+
 print(out_multi)
 
 
@@ -341,20 +404,71 @@ headings = [
     'Sick Leave Begin Balance Leave Year',
     'Sick Leave Earned Current',
     'Sick Leave Earned YTD',
+    'Sick Leave Used Current',
     'Sick Leave Used YTD',
     'Sick Leave Advanced',
     'Sick Leave Ending Balance',
-    'Home Address'
+    'Time Off Award Begin Balance Current',
+    'Time Off Award Begin Balance Leave Year',
+    'Time Off Award Advanced',
+    'Time Off Award Ending Balance',
+    'Home Address',
+    'Federal Taxes Adjusted',
+    'Federal Taxes Current',
+    'Federal Taxes YTD',
+    'State Tax 1 ( DC ) Adjusted',
+    'State Tax 1 ( DC ) Current',
+    'State Tax 1 ( DC ) YTD',
+    'State Tax 1 ( VA ) Adjusted',
+    'State Tax 1 ( VA ) Current',
+    'State Tax 1 ( VA ) YTD',
+    'State Tax 2 ( DC ) Adjusted',
+    'State Tax 2 ( DC ) Current',
+    'State Tax 2 ( DC ) YTD',
+    'Health Benefits - Adjusted',
+    'Health Benefits - Current',
+    'Health Benefits - YTD',
+    'Dental/Vision Adjusted',
+    'Dental/Vision Current',
+    'Dental/Vision YTD',
+    'TSP Tax Deferred Adjusted',
+    'TSP Tax Deferred Current',
+    'TSP Tax Deferred YTD',
+    'Retirement - FERS/FRAE Adjusted',
+    'Retirement - FERS/FRAE Current',
+    'Retirement - FERS/FRAE YTD',
+    'OASDI Tax Adjusted',
+    'OASDI Tax Current',
+    'OASDI Tax YTD',
+    'Medicare Tax Adjusted',
+    'Medicare Tax Current',
+    'Medicare Tax YTD',
+    'FEGLI - Regular Adjusted',
+    'FEGLI - Regular Current',
+    'FEGLI - Regular YTD',
+    'Service Comp Date',
+    'Agency',
+    'Cumulative Retirement Agency',
+    'Duty Station',
+    'Pay Begin Date',
+    'Financial Institution',
+    'TSP Tax Deferred Amt/%',
+    'FEGLI Current',
+    'FEGLI YTD',
+    'Medicare Current',
+    'Medicare YTD',
+    'OASDI Current',
+    'OASDI YTD',
+    'TSP Basic Current',
+    'TSP Basic YTD',
+    'TSP Matching Current',
+    'TSP Matching YTD',
+    'FERS/FRAE Current',
+    'FERS/FRAE YTD'
     ]
 
 df = pd.DataFrame(out_multi, columns=headings)
 print(df)
-
-
-
-
-
-
 
 
 
