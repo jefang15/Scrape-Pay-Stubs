@@ -111,149 +111,74 @@ def scrape_pay_stubs(folder):
     return out
 
 
-" Apply Function to Pay Stubs "
-
-pay_stubs = glob.glob('Projects/Scrape-Paystubs/FERC - Earnings & Leave Statements/*.pdf')
+pay_stubs = glob.glob('Projects/Scrape-Paystubs/Pay Stubs - FERC/*.pdf')
 scraped_pay_data = scrape_pay_stubs(pay_stubs)
 
 " Create DataFrame "
-headings = [
-    'Pay Period Ending',
-    'Net Pay',
-    'Pay Period',
-    'Pay Date',
-    'Pay Plan',
-    'Pay Grade',
-    'Pay Step',
-    'Annual Salary',
-    'Hourly Rate',
-    'YTD Wages',
-    'Gross Pay YTD',
-    'Total Deductions YTD',
-    'Maximum Carry Over',
-    'Use Or Lose Balance',
-    'Annual Leave Begin Balance',
-    'Annual Leave Begin Balance Leave Year',
-    'Annual Leave',
-    'Annual Leave Earned YTD',
-    'Annual Leave Used',
-    'Annual Leave Used YTD',
-    'Annual Leave Advanced',
-    'Annual Leave Total',
-    'Sick Leave Begin Balance',
-    'Sick Leave Begin Balance Leave Year',
-    'Sick Leave',
-    'Sick Leave Earned YTD',
-    'Sick Leave Used',
-    'Sick Leave Used YTD',
-    'Sick Leave Advanced',
-    'Sick Leave Total',
-    'Time Off Award Begin Balance',
-    'Time Off Award Begin Balance Leave Year',
-    'Time Off Award',
-    'Time Off Award Earned YTD',
-    'Time Off Award Used',
-    'Time Off Award Used YTD',
-    'Time Off Award Advanced',
-    'Time Off Award Total',
-    'Other Award',
-    'Home Address',
-    'Federal Taxes Adjusted',
-    'Federal Taxes',
-    'Federal Taxes YTD',
-    'State Tax 1 ( DC ) Adjusted',
-    'State Tax 1 ( DC )',
-    'State Tax 1 ( DC ) YTD',
-    'State Tax 1 ( VA ) Adjusted',
-    'State Tax 1 ( VA )',
-    'State Tax 1 ( VA ) YTD',
-    'State Tax 2 ( DC ) Adjusted',
-    'State Tax 2 ( DC )',
-    'State Tax 2 ( DC ) YTD',
-    'Health Benefits Adjusted',
-    'Health Benefits',
-    'Health Benefits YTD',
-    'Dental/Vision Adjusted',
-    'Dental/Vision',
-    'Dental/Vision YTD',
-    'TSP Tax Deferred Adjusted',
-    'TSP Tax Deferred',
-    'TSP Tax Deferred YTD',
-    'Retirement - FERS/FRAE Adjusted',
-    'Retirement - FERS/FRAE',
-    'Retirement - FERS/FRAE YTD',
-    'OASDI Tax Adjusted',
-    'OASDI Tax',
-    'OASDI Tax YTD',
-    'Medicare Tax Adjusted',
-    'Medicare Tax',
-    'Medicare Tax YTD',
-    'FEGLI - Regular Adjusted',
-    'FEGLI - Regular',
-    'FEGLI - Regular YTD',
-    'Service Comp Date',
-    'Agency',
-    'Cumulative Retirement Agency',
-    'Duty Station',
-    'Pay Begin Date',
-    'Financial Institution',
-    'TSP Tax Deferred Amt',
-    'FEGLI',
-    'FEGLI YTD',
-    'Medicare',
-    'Medicare YTD',
-    'OASDI',
-    'OASDI YTD',
-    'TSP Basic',
-    'TSP Basic YTD',
-    'TSP Matching',
-    'TSP Matching YTD',
-    'FERS/FRAE',
-    'FERS/FRAE YTD'
-    ]
+headings = ['Pay Period Ending', 'Net Pay', 'Pay Period', 'Pay Date', 'Pay Plan', 'Pay Grade', 'Pay Step', 'Annual Salary',
+            'Hourly Rate', 'YTD Wages', 'Gross Pay YTD', 'Total Deductions YTD', 'Maximum Carry Over', 'Use Or Lose Balance',
+            'Annual Leave Begin Balance', 'Annual Leave Begin Balance Leave Year', 'Annual Leave', 'Annual Leave Earned YTD',
+            'Annual Leave Used', 'Annual Leave Used YTD', 'Annual Leave Advanced', 'Annual Leave Total',
+            'Sick Leave Begin Balance', 'Sick Leave Begin Balance Leave Year', 'Sick Leave', 'Sick Leave Earned YTD',
+            'Sick Leave Used', 'Sick Leave Used YTD', 'Sick Leave Advanced', 'Sick Leave Total',
+            'Time Off Award Begin Balance', 'Time Off Award Begin Balance Leave Year', 'Time Off Award',
+            'Time Off Award Earned YTD', 'Time Off Award Used', 'Time Off Award Used YTD', 'Time Off Award Advanced',
+            'Time Off Award Total', 'Other Award', 'Home Address', 'Federal Taxes Adjusted', 'Federal Taxes', 'Federal Taxes YTD',
+            'State Tax 1 ( DC ) Adjusted', 'State Tax 1 ( DC )', 'State Tax 1 ( DC ) YTD', 'State Tax 1 ( VA ) Adjusted',
+            'State Tax 1 ( VA )', 'State Tax 1 ( VA ) YTD', 'State Tax 2 ( DC ) Adjusted', 'State Tax 2 ( DC )',
+            'State Tax 2 ( DC ) YTD', 'Health Benefits Adjusted', 'Health Benefits', 'Health Benefits YTD',
+            'Dental/Vision Adjusted', 'Dental/Vision', 'Dental/Vision YTD', 'TSP Tax Deferred Adjusted', 'TSP Tax Deferred',
+            'TSP Tax Deferred YTD', 'Retirement - FERS/FRAE Adjusted', 'Retirement - FERS/FRAE', 'Retirement - FERS/FRAE YTD',
+            'OASDI Tax Adjusted', 'OASDI Tax', 'OASDI Tax YTD', 'Medicare Tax Adjusted', 'Medicare Tax', 'Medicare Tax YTD',
+            'FEGLI - Regular Adjusted', 'FEGLI - Regular', 'FEGLI - Regular YTD', 'Service Comp Date', 'Agency',
+            'Cumulative Retirement Agency', 'Duty Station', 'Pay Begin Date', 'Financial Institution', 'TSP Tax Deferred Amt',
+            'FEGLI', 'FEGLI YTD', 'Medicare', 'Medicare YTD', 'OASDI', 'OASDI YTD', 'TSP Basic', 'TSP Basic YTD', 'TSP Matching',
+            'TSP Matching YTD', 'FERS/FRAE', 'FERS/FRAE YTD'
+            ]
 
 df_scraped_pay = pd.DataFrame(scraped_pay_data, columns=headings)
 
 
-" Clean Pay Data "
+def convert_datatypes(df):
+    vars_to_datetime = [
+        'Pay Period Ending', 'Pay Date', 'Service Comp Date', 'Pay Begin Date'
+        ]
+    df[vars_to_datetime] = df[vars_to_datetime].apply(pd.to_datetime)
 
-# Convert Data Types
-print(df_scraped_pay.dtypes)
+    vars_to_int = [
+        'Pay Period', 'Pay Grade', 'Pay Step', 'Maximum Carry Over', 'Use Or Lose Balance', 'Annual Leave Begin Balance',
+        'Annual Leave Begin Balance Leave Year', 'Annual Leave', 'Annual Leave Earned YTD', 'Annual Leave Used',
+        'Annual Leave Used YTD', 'Annual Leave Advanced', 'Annual Leave Total', 'Sick Leave Begin Balance',
+        'Sick Leave Begin Balance Leave Year', 'Sick Leave', 'Sick Leave Earned YTD', 'Sick Leave Used', 'Sick Leave Used YTD',
+        'Sick Leave Advanced', 'Sick Leave Total', 'Time Off Award Begin Balance', 'Time Off Award Begin Balance Leave Year',
+        'Time Off Award', 'Time Off Award Earned YTD', 'Time Off Award Used', 'Time Off Award Used YTD',
+        'Time Off Award Advanced',
+        'Time Off Award Total'
+        ]
+    df[vars_to_int] = df[vars_to_int].apply(pd.to_numeric).fillna(0).astype(int)
 
-# TODO: turn to function
-var_to_datetime = [
-    'Pay Period Ending', 'Pay Date', 'Service Comp Date', 'Pay Begin Date'
-    ]
-df_scraped_pay[var_to_datetime] = df_scraped_pay[var_to_datetime].apply(pd.to_datetime)
+    vars_to_float = [
+        'Net Pay', 'Annual Salary', 'Hourly Rate', 'YTD Wages', 'Gross Pay YTD', 'Total Deductions YTD', 'Federal Taxes Adjusted',
+        'Other Award', 'Federal Taxes', 'Federal Taxes YTD', 'State Tax 1 ( DC ) Adjusted', 'State Tax 1 ( DC )',
+        'State Tax 1 ( DC ) YTD', 'State Tax 1 ( VA ) Adjusted', 'State Tax 1 ( VA )', 'State Tax 1 ( VA ) YTD',
+        'State Tax 2 ( DC ) Adjusted', 'State Tax 2 ( DC )', 'State Tax 2 ( DC ) YTD', 'Health Benefits Adjusted',
+        'Health Benefits', 'Health Benefits YTD', 'Dental/Vision Adjusted', 'Dental/Vision', 'Dental/Vision YTD',
+        'TSP Tax Deferred Adjusted', 'TSP Tax Deferred', 'TSP Tax Deferred YTD', 'Retirement - FERS/FRAE Adjusted',
+        'Retirement - FERS/FRAE', 'Retirement - FERS/FRAE YTD', 'OASDI Tax Adjusted', 'OASDI Tax', 'OASDI Tax YTD',
+        'Medicare Tax Adjusted', 'Medicare Tax', 'Medicare Tax YTD', 'FEGLI - Regular Adjusted', 'FEGLI - Regular',
+        'FEGLI - Regular YTD', 'Cumulative Retirement Agency', 'FEGLI', 'FEGLI YTD', 'Medicare', 'Medicare YTD', 'OASDI',
+        'OASDI YTD', 'TSP Basic', 'TSP Basic YTD', 'TSP Matching', 'TSP Matching YTD', 'FERS/FRAE', 'FERS/FRAE YTD'
+        ]
+    df[vars_to_float] = df[vars_to_float].replace(',', '', regex=True).apply(pd.to_numeric, errors='coerce').fillna(0)
 
-var_to_int = [
-    'Pay Period', 'Pay Grade', 'Pay Step', 'Maximum Carry Over', 'Use Or Lose Balance', 'Annual Leave Begin Balance',
-    'Annual Leave Begin Balance Leave Year', 'Annual Leave', 'Annual Leave Earned YTD', 'Annual Leave Used',
-    'Annual Leave Used YTD', 'Annual Leave Advanced', 'Annual Leave Total', 'Sick Leave Begin Balance',
-    'Sick Leave Begin Balance Leave Year', 'Sick Leave', 'Sick Leave Earned YTD', 'Sick Leave Used', 'Sick Leave Used YTD',
-    'Sick Leave Advanced', 'Sick Leave Total', 'Time Off Award Begin Balance',  'Time Off Award Begin Balance Leave Year',
-    'Time Off Award', 'Time Off Award Earned YTD', 'Time Off Award Used', 'Time Off Award Used YTD', 'Time Off Award Advanced',
-    'Time Off Award Total'
-    ]
-df_scraped_pay[var_to_int] = df_scraped_pay[var_to_int].apply(pd.to_numeric).fillna(0).astype(int)
+    # Clean up remaining fields
+    df['TSP Tax Deferred Amt'] = df['TSP Tax Deferred Amt'].replace(' ', '', regex=True)
+    df['Home Address'] = df['Home Address'].replace('<end>', '', regex=True)
 
-var_to_float = [
-    'Net Pay', 'Annual Salary', 'Hourly Rate', 'YTD Wages', 'Gross Pay YTD', 'Total Deductions YTD', 'Federal Taxes Adjusted',
-    'Other Award', 'Federal Taxes', 'Federal Taxes YTD', 'State Tax 1 ( DC ) Adjusted', 'State Tax 1 ( DC )',
-    'State Tax 1 ( DC ) YTD', 'State Tax 1 ( VA ) Adjusted', 'State Tax 1 ( VA )', 'State Tax 1 ( VA ) YTD',
-    'State Tax 2 ( DC ) Adjusted', 'State Tax 2 ( DC )', 'State Tax 2 ( DC ) YTD', 'Health Benefits Adjusted',
-    'Health Benefits', 'Health Benefits YTD', 'Dental/Vision Adjusted', 'Dental/Vision', 'Dental/Vision YTD',
-    'TSP Tax Deferred Adjusted', 'TSP Tax Deferred', 'TSP Tax Deferred YTD', 'Retirement - FERS/FRAE Adjusted',
-    'Retirement - FERS/FRAE', 'Retirement - FERS/FRAE YTD', 'OASDI Tax Adjusted', 'OASDI Tax', 'OASDI Tax YTD',
-    'Medicare Tax Adjusted', 'Medicare Tax', 'Medicare Tax YTD', 'FEGLI - Regular Adjusted', 'FEGLI - Regular',
-    'FEGLI - Regular YTD', 'Cumulative Retirement Agency', 'FEGLI', 'FEGLI YTD', 'Medicare', 'Medicare YTD', 'OASDI',
-    'OASDI YTD', 'TSP Basic', 'TSP Basic YTD', 'TSP Matching', 'TSP Matching YTD', 'FERS/FRAE', 'FERS/FRAE YTD'
-    ]
-df_scraped_pay[var_to_float] = df_scraped_pay[var_to_float].replace(',', '', regex=True).apply(pd.to_numeric, errors='coerce').fillna(0)
+    return df
 
-# Clean up remaining fields
-df_scraped_pay['TSP Tax Deferred Amt'] = df_scraped_pay['TSP Tax Deferred Amt'].replace(' ', '', regex=True)
-df_scraped_pay['Home Address'] = df_scraped_pay['Home Address'].replace('<end>', '', regex=True)
+
+df_scraped_pay = convert_datatypes(df_scraped_pay)
 
 df_scraped_pay['Year'] = df_scraped_pay['Pay Period Ending'].dt.year
 
@@ -362,22 +287,10 @@ paystubs_master = paystubs_master.sort_values(by=['Pay Date']).copy().reset_inde
 
 # Components of gross pay
 gross_pay = paystubs_master[[
-    'Pay Period Ending',
-    'Net Pay',
-    'Federal Taxes',
-    'State Tax 1 ( DC )',
-    'State Tax 1 ( VA )',
-    'State Tax 2 ( DC )',
-    'Health Benefits',
-    'Dental/Vision',
-    'TSP Tax Deferred',
-    'Retirement - FERS/FRAE',
-    'OASDI Tax',
-    'Medicare Tax',
+    'Pay Period Ending', 'Year', 'Net Pay', 'Federal Taxes', 'State Tax 1 ( DC )', 'State Tax 1 ( VA )', 'State Tax 2 ( DC )',
+    'Health Benefits', 'Dental/Vision', 'TSP Tax Deferred', 'Retirement - FERS/FRAE', 'OASDI Tax', 'Medicare Tax',
     'FEGLI - Regular'
     ]].copy()
-
-gross_pay['Year'] = pd.to_datetime(gross_pay['Pay Period Ending']).dt.year
 
 gross_pay_long = gross_pay.melt(
     id_vars=['Pay Period Ending', 'Year'],
@@ -400,12 +313,15 @@ gross_pay_long.loc[gross_pay_long['Description'] == 'FEGLI - Regular', 'Category
 
 pay_annual = gross_pay_long.groupby(['Year', 'Category'])['Amount'].sum().reset_index()
 
+
 " Import Chase Statements "
+
 
 def concat_chase_statements(folder):
     for statement in folder:
         concat_csv = pd.concat(pd.read_csv(statement) for statement in folder)
         return concat_csv
+
 
 chase_statements = glob.glob('Projects/Scrape-Paystubs/Expenses - Chase/*')
 chase_concat = concat_chase_statements(chase_statements).reset_index(drop=True)
@@ -436,10 +352,12 @@ chase_master.dtypes
 
 " Import American Express Statements "
 
+
 def concat_amex_statements(folder):
     for statement in folder:
         concat_xlsx = pd.concat(pd.read_excel(statement, skiprows=6) for statement in folder)
         return concat_xlsx
+
 
 amex_statements = glob.glob('Projects/Scrape-Paystubs/Expenses - AMEX/*')
 amex_concat = concat_amex_statements(amex_statements)
@@ -490,7 +408,7 @@ charges_concat.loc[charges_concat['Merchant'].str.contains(
 charges_concat = charges_concat[~charges_concat['Category Description'].str.contains('Fees & Adjustments')]
 charges_concat = charges_concat[charges_concat['Year'] > 2019]
 
-charges_master = charges_concat.copy()
+charges_master = charges_concat.sort_values(by=['Year', 'Transaction Date', 'Category Description', 'Merchant']).copy()
 
 # charges_master.to_csv('Projects/Scrape-Paystubs/Out/Expenses Master.csv', index=False)
 
@@ -503,44 +421,39 @@ charges_annual = charges_master.groupby(['Year', 'Category'])['Amount'].sum().re
 charges_description_annual = charges_master.groupby(['Year', 'Category Description'])['Amount'].sum().reset_index()
 
 
-" Plot Credit Card Charges by Category Description in Multi-Bar Chart "
+" Plot Annual Credit Card Charges in Multi-Bar Chart "
 
 # Transform data long to wide by Year
-charges_description_sum_wide = charges_description_annual.pivot(
+charges_description_wide = charges_description_annual.pivot(
     index='Category Description',
     columns='Year',
     values='Amount'
     ).reset_index()
 
-
 plt.style.use('seaborn-notebook')  # Set style
 fig, ax = plt.subplots(figsize=(13, 8))  # Set figure
 
-x_axis = np.arange(len(charges_description_sum_wide['Category Description']))
+x_axis = np.arange(len(charges_description_wide['Category Description']))
 
 # Plot
-plt.bar(x_axis - 0.2, charges_description_sum_wide.iloc[:, 1], width=0.4, label='2020')
-plt.bar(x_axis + 0.2, charges_description_sum_wide.iloc[:, 2], width=0.4, label='2021')
+plt.bar(x_axis - 0.2, charges_description_wide.iloc[:, 1], width=0.4, label='2020')
+plt.bar(x_axis + 0.2, charges_description_wide.iloc[:, 2], width=0.4, label='2021')
 
 # Titles
-plt.title('Annual Expenses by Category Description',
+plt.title('Annual Expenses by Category',
           fontweight='bold',
           fontsize=20)
-plt.xlabel('Charge Category Description',
-           fontweight='bold',
-           size=12)
 plt.ylabel('Amount ($)',
            fontweight='bold',
            size=12)
 
-# Format axes
-plt.xticks(x_axis, charges_description_sum_wide['Category Description'])
-
+plt.xticks(x_axis, charges_description_wide['Category Description'])
 plt.tight_layout()
 plt.legend()
 plt.show()
 
-# TODO: Save figure to Out folder
+# plt.savefig('Projects/Scrape-Paystubs/Out/Annual Expenses by Category.png', dpi=300)
+# plt.savefig('Projects/Scrape-Paystubs/Out/Annual Expenses by Category.pdf')
 
 
 " Concatenate Annual Pay and Charges "
@@ -563,6 +476,6 @@ gross_pay = paystubs_master.iloc[:, [7, 12]].loc[paystubs_master['Pay Period'] =
 pay_charge_wide = pay_charge_wide.merge(gross_pay, how='left', left_on=['Year'], right_on=['Year'])
 
 pay_charge_wide['Savings'] = pay_charge_wide['Gross Pay YTD'] - pay_charge_wide['Taxes'] - pay_charge_wide['Retirement'] \
-          - pay_charge_wide['Health Insurance'] - pay_charge_wide['Expenses']
+                             - pay_charge_wide['Health Insurance'] - pay_charge_wide['Expenses']
 
 print(tabulate(pay_charge_wide, headers='keys', tablefmt='plain'))
