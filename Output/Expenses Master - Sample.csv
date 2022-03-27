@@ -1,16 +1,29 @@
 Transaction Date,Year,Category,Category Description,Merchant,Amount
-2020-01-01,2020,Expenses,Shopping,APPLE.COM/BILL,9.99
-2020-01-04,2020,Expenses,Groceries,WHOLEFDS SCP #10563,16.51
-2020-01-05,2020,Expenses,Food & Drink,DUE SOUTH,26.55
-2020-01-05,2020,Expenses,Health & Wellness,MMG MEDSTAR PHYSICIANS,25.0
-2020-01-06,2020,Expenses,Food & Drink,KRUBA RESTAURANT,15.41
-2020-01-06,2020,Expenses,Groceries,HARRIS TEETER 383,3.8
-2020-01-06,2020,Expenses,Groceries,HARRIS TEETER 383,20.62
-2020-01-06,2020,Expenses,Health & Wellness,CVS/PHARMACY #07102,9.1
-2020-01-06,2020,Expenses,Shopping,BANANA REPUBLIC ON-LINE,-51.94
-2020-01-07,2020,Expenses,Groceries,HARRIS TEETER 383,40.82
-2020-01-08,2020,Expenses,Food & Drink,SUNRISE CAFE,10.76
-2020-01-09,2020,Expenses,Food & Drink,SUNRISE CAFE,10.52
-2020-01-10,2020,Expenses,Food & Drink,SQ *KABOB_KING,9.0
-2020-01-11,2020,Expenses,Food & Drink,DUE SOUTH,19.25
-2020-01-13,2020,Expenses,Food & Drink,TST* HATOBA,15.67
+2020-08-03,2020,Expenses,Entertainment,THE NC ARBORETUM,16.0
+2021-05-18,2021,Expenses,Entertainment,TICKETS.COM I 03,121.0
+2021-07-18,2021,Expenses,Entertainment,FH* BALMY DAYS CRUISES,21.0
+2021-07-18,2021,Expenses,Entertainment,FH* BALMY DAYS CRUISES,44.52
+2021-07-18,2021,Expenses,Entertainment,FH* BALMY DAYS CRUISES,21.0
+2021-07-21,2021,Expenses,Entertainment,ACADIA NATIONAL PARK,30.0
+2021-07-29,2021,Expenses,Streaming,Spotify USA,10.59
+2021-07-31,2021,Expenses,Entertainment,FANDANGO,24.98
+2021-07-31,2021,Expenses,Entertainment,TM *D.C. UNITED,159.25
+2021-08-29,2021,Expenses,Streaming,Spotify USA,10.59
+2021-09-18,2021,Expenses,Entertainment,FANDANGO,36.58
+2021-09-18,2021,Expenses,Entertainment,FANDANGO,4.58
+2021-09-18,2021,Expenses,Entertainment,FANDANGO,4.58
+2021-09-29,2021,Expenses,Streaming,Spotify USA,10.59
+2021-10-04,2021,Expenses,Streaming,DISNEY PLUS ECOM    BURBANK             CA,8.47
+2021-10-18,2021,Expenses,Streaming,NETFLIX.COM         866-579-7172        CA,19.07
+2021-10-26,2021,Expenses,Streaming,HLU*HULU 14078098980HULU.COM/BILL       CA,13.77
+2021-10-29,2021,Expenses,Streaming,SPOTIFY USA         NEW YORK,10.59
+2021-11-04,2021,Expenses,Streaming,DISNEY PLUS         BURBANK             CA,8.47
+2021-11-18,2021,Expenses,Streaming,NETFLIX.COM         866-579-7172        CA,19.07
+2021-11-21,2021,Expenses,Entertainment,2654 AMC GEORGETOWN 14,7.14
+2021-11-26,2021,Expenses,Streaming,HLU*HULU 14078098608HULU.COM/BILL       CA,13.77
+2021-11-28,2021,Expenses,Streaming,SPOTIFY             NEW YORK            NY,10.59
+2021-12-04,2021,Expenses,Streaming,DISNEY PLUS         BURBANK             CA,8.47
+2021-12-17,2021,Expenses,Entertainment,2654 AMC GEORGETOWN 14,22.66
+2021-12-18,2021,Expenses,Streaming,NETFLIX.COM         866-579-7172        CA,19.07
+2021-12-26,2021,Expenses,Streaming,HLU*HULU 14078098663HULU.COM/BILL       CA,13.77
+2021-12-28,2021,Expenses,Streaming,SPOTIFY             NEW YORK            NY,10.59

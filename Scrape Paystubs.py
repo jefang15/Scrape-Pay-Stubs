@@ -114,7 +114,9 @@ def scrape_pay_stubs(folder):
 pay_stubs = glob.glob('Projects/Scrape-Paystubs/Pay Stubs - FERC/*.pdf')
 scraped_pay_data = scrape_pay_stubs(pay_stubs)
 
+
 " Create DataFrame "
+
 headings = ['Pay Period Ending', 'Net Pay', 'Pay Period', 'Pay Date', 'Pay Plan', 'Pay Grade', 'Pay Step', 'Annual Salary',
             'Hourly Rate', 'YTD Wages', 'Gross Pay YTD', 'Total Deductions YTD', 'Maximum Carry Over', 'Use Or Lose Balance',
             'Annual Leave Begin Balance', 'Annual Leave Begin Balance Leave Year', 'Annual Leave', 'Annual Leave Earned YTD',
@@ -314,7 +316,7 @@ gross_pay_long.loc[gross_pay_long['Description'] == 'FEGLI - Regular', 'Category
 pay_annual = gross_pay_long.groupby(['Year', 'Category'])['Amount'].sum().reset_index()
 
 
-" Import Chase Statements "
+" Import Credit Card Statements "
 
 
 def concat_chase_statements(folder):
@@ -350,8 +352,6 @@ chase_master = chase_concat[['Transaction Date', 'Year', 'Category', 'Category D
 chase_master.dtypes
 
 
-" Import American Express Statements "
-
 
 def concat_amex_statements(folder):
     for statement in folder:
@@ -376,7 +376,7 @@ amex_master = amex_concat[['Transaction Date', 'Year', 'Category', 'Category Des
 amex_master.dtypes
 
 
-" Concatenate Chase and AMEX Charges "
+" Concatenate Credit Card Charges "
 
 charges_concat = pd.concat([chase_master, amex_master], ignore_index=True)
 
@@ -411,7 +411,10 @@ charges_concat = charges_concat[charges_concat['Year'] > 2019]
 charges_master = charges_concat.sort_values(by=['Year', 'Transaction Date', 'Category Description', 'Merchant']).copy()
 
 # charges_master.to_csv('Projects/Scrape-Paystubs/Output/Expenses Master.csv', index=False)
-# charges_master.head(15).to_csv('Projects/Scrape-Paystubs/Output/Expenses Master - Sample.csv', index=False)
+
+# charges_master.loc[
+#     (charges_master['Category Description'] == 'Streaming') | (charges_master['Category Description'] == 'Entertainment')].to_csv(
+#     'Projects/Scrape-Paystubs/Output/Expenses Master - Sample.csv', index=False)
 
 
 " Analyze Credit Card Charges "
@@ -421,15 +424,15 @@ charges_annual = charges_master.groupby(['Year', 'Category'])['Amount'].sum().re
 # To plot
 charges_description_annual = charges_master.groupby(['Year', 'Category Description'])['Amount'].sum().reset_index()
 
-
-" Plot Annual Credit Card Charges in Multi-Bar Chart "
-
 # Transform data long to wide by Year
 charges_description_wide = charges_description_annual.pivot(
     index='Category Description',
     columns='Year',
     values='Amount'
     ).reset_index()
+
+
+" Plot Annual Charges "
 
 
 plt.style.use('seaborn-notebook')  # Set style
