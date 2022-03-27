@@ -280,7 +280,7 @@ paystubs_master = df_scraped_pay[[
 
 paystubs_master = paystubs_master.sort_values(by=['Pay Date']).copy().reset_index(drop=True)
 
-# paystubs_master.to_csv('Projects/Scrape-Paystubs/Out/Earnings and Leave Statements Master.csv', index=False)
+# paystubs_master.to_csv('Projects/Scrape-Paystubs/Output/Earnings and Leave Statements Master.csv', index=False)
 
 
 " Summarize Pay and Deductions "
@@ -359,7 +359,7 @@ def concat_amex_statements(folder):
         return concat_xlsx
 
 
-amex_statements = glob.glob('Projects/Scrape-Paystubs/Expenses - AMEX/*')
+amex_statements = glob.glob('Projects/Scrape-Paystubs/Expenses - American Express/*')
 amex_concat = concat_amex_statements(amex_statements)
 
 amex_concat = amex_concat.loc[(amex_concat['Amount'] > 0)].copy().reset_index(drop=True)
@@ -410,7 +410,8 @@ charges_concat = charges_concat[charges_concat['Year'] > 2019]
 
 charges_master = charges_concat.sort_values(by=['Year', 'Transaction Date', 'Category Description', 'Merchant']).copy()
 
-# charges_master.to_csv('Projects/Scrape-Paystubs/Out/Expenses Master.csv', index=False)
+# charges_master.to_csv('Projects/Scrape-Paystubs/Output/Expenses Master.csv', index=False)
+# charges_master.head(15).to_csv('Projects/Scrape-Paystubs/Output/Expenses Master - Sample.csv', index=False)
 
 
 " Analyze Credit Card Charges "
@@ -429,6 +430,7 @@ charges_description_wide = charges_description_annual.pivot(
     columns='Year',
     values='Amount'
     ).reset_index()
+
 
 plt.style.use('seaborn-notebook')  # Set style
 fig, ax = plt.subplots(figsize=(13, 8))  # Set figure
@@ -452,8 +454,8 @@ plt.tight_layout()
 plt.legend()
 plt.show()
 
-# plt.savefig('Projects/Scrape-Paystubs/Out/Annual Expenses by Category.png', dpi=300)
-# plt.savefig('Projects/Scrape-Paystubs/Out/Annual Expenses by Category.pdf')
+# plt.savefig('Projects/Scrape-Paystubs/Output/Annual Expenses by Category.png')
+# plt.savefig('Projects/Scrape-Paystubs/Output/Annual Expenses by Category.pdf')
 
 
 " Concatenate Annual Pay and Charges "
