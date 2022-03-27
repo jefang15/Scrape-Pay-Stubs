@@ -463,7 +463,6 @@ plt.show()
 
 " Concatenate Annual Pay and Charges "
 
-# Concatenate
 pay_charge_concat = pd.concat([pay_annual, charges_annual], ignore_index=True)
 pay_charge_annual = pay_charge_concat[['Year', 'Category', 'Amount']].sort_values(by=['Year', 'Category'])
 
